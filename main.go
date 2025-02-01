@@ -44,6 +44,7 @@ func main() {
 	cmds.register("users", handlerUsers)
 	cmds.register("agg",handlerAgg)
 	cmds.register("addfeed",handlerAddFeed)
+	cmds.register("feeds",handlerFeeds)
 
 	//checking if arguments are less than 2
 	// fmt.Print(os.Args,"\n")
