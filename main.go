@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"os"
@@ -26,7 +27,12 @@ func main() {
 
 	}
 	dbQueries := database.New(db)
-
+	//fetch feed
+	feed, err:=fetchFeed(context.Background(),"https://www.wagslane.dev/index.xml")
+	if err!=nil{
+		fmt.Print("err: ",err,"\n")
+	}
+	fmt.Print("feed: \n",feed,"\n")
 	// Initializing application state
 	s := &state{
 		cfg: &cfg,
@@ -81,10 +87,13 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	var feed RSSFeed
 
-	err = xml.Unmarshal(data, feed)
+	err = xml.Unmarshal(data, &feed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse RSS feed: %w", err)
 	}
-
-	return &feed, nil
+	// fmt.Print(feed.Channel.Description,"\n",feed.Channel.Title,"\n")
+	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
+	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
+	
+	return  &feed, nil
 }
