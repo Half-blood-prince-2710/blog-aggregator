@@ -12,50 +12,49 @@ import (
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.arguments) == 0 {
 		return fmt.Errorf("error: username required\n")
-		
+
 	}
-	
-	user , err:=s.db.GetUser(context.Background(),cmd.arguments[0])
-	if err!=nil {
-		return fmt.Errorf("error: user is not registerd , err: %s",err)
+
+	user, err := s.db.GetUser(context.Background(), cmd.arguments[0])
+	if err != nil {
+		return fmt.Errorf("error: user is not registerd , err: %s", err)
 	}
-	err =s.cfg.SetUser(user.Name)
-	if err!=nil {
+	err = s.cfg.SetUser(user.Name)
+	if err != nil {
 		return err
 	}
-	fmt.Print("User has been Set to ",user.Name)
+	fmt.Print("User has been Set to ", user.Name)
 	return nil
 }
-
 
 func handlerRegister(s *state, cmd command) error {
 
 	if len(cmd.arguments) == 0 {
-    return fmt.Errorf("error: username required for registration\n")
-}
+		return fmt.Errorf("error: username required for registration\n")
+	}
 
-	user:= database.CreateUserParams{
-		ID: uuid.New(),
+	user := database.CreateUserParams{
+		ID:        uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Name: cmd.arguments[0],
+		Name:      cmd.arguments[0],
 	}
-	data, err :=s.db.CreateUser(context.Background(),user)
-	if err!=nil{
+	data, err := s.db.CreateUser(context.Background(), user)
+	if err != nil {
 		return fmt.Errorf("error: user is not registered\n")
 	}
-	err= s.cfg.SetUser(data.Name)
-	if err!=nil {
+	err = s.cfg.SetUser(data.Name)
+	if err != nil {
 		return fmt.Errorf("error: Setting user\n")
 	}
-	fmt.Print("User succesfully created: \n",data,"\n")
+	fmt.Print("User succesfully created: \n", data, "\n")
 	return nil
 }
 
-func handlerReset(s *state, cmd command) error{
-	err:= s.db.DeleteAllUser(context.Background())
-	if err!=nil {
-		return fmt.Errorf("error: error deleting users, err: %s",err)
+func handlerReset(s *state, cmd command) error {
+	err := s.db.DeleteAllUser(context.Background())
+	if err != nil {
+		return fmt.Errorf("error: error deleting users, err: %s", err)
 	}
 
 	fmt.Print("Sucessfully deleted all users \n")
@@ -64,71 +63,84 @@ func handlerReset(s *state, cmd command) error{
 
 func handlerUsers(s *state, cmd command) error {
 	users, err := s.db.GetUsers(context.Background())
-	if err!=nil {
-		return fmt.Errorf("error: error fetching list of users\nerr: %s",err)
+	if err != nil {
+		return fmt.Errorf("error: error fetching list of users\nerr: %s", err)
 	}
-	
-	for _,user:=range users {
+
+	for _, user := range users {
 		if s.cfg.Username == user.Name {
-			fmt.Print("* ",user.Name," (current)\n")
+			fmt.Print("* ", user.Name, " (current)\n")
 			continue
 		}
-		fmt.Print("* ",user.Name,"\n")
+		fmt.Print("* ", user.Name, "\n")
 	}
 
-	return  nil
-}
-
-
-
-// feed handlers 
-
-
-func handlerAgg(s *state, cmd command) error {
-	//fetch feed
-	feed, err:=fetchFeed(context.Background(),"https://www.wagslane.dev/index.xml")
-	if err!=nil{
-		fmt.Print("err: ",err,"\n")
-		return err
-	}
-	fmt.Print("feed: \n",feed,"\n")
 	return nil
 }
 
-func handlerAddFeed(s *state,cmd command) error {
-	if len(cmd.arguments)<2 {
+// feed handlers
+
+func handlerAgg(s *state, cmd command) error {
+	//fetch feed
+	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		fmt.Print("err: ", err, "\n")
+		return err
+	}
+	fmt.Print("feed: \n", feed, "\n")
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.arguments) < 2 {
 		return fmt.Errorf("error: not enough arguments\n ")
 	}
-	user,err:=s.db.GetUser(context.Background(),s.cfg.Username)
-	if err!=nil {
-		return fmt.Errorf("error: error fetching user\nerr: %w\n",err)
+	user, err := s.db.GetUser(context.Background(), s.cfg.Username)
+	if err != nil {
+		return fmt.Errorf("error: error fetching user\nerr: %w\n", err)
 	}
 	name := cmd.arguments[0]
 	url := cmd.arguments[1]
 	var feed database.CreateFeedParams
 	feed.Name = name
-	feed.Url= url
+	feed.Url = url
 	feed.UserID = user.ID
-	feeds,err:=s.db.CreateFeed(context.Background(),feed)
-	if err!=nil {
-		return fmt.Errorf("error: error creating feed\nerr: %w\n",err)
+	feeds, err := s.db.CreateFeed(context.Background(), feed)
+	if err != nil {
+		return fmt.Errorf("error: error creating feed\nerr: %w\n", err)
 	}
-	fmt.Print("feed: \n",feeds)
-return nil
+	fmt.Print("feed: \n", feeds)
+	return nil
 }
 
 func handlerFeeds(s *state, cmd command) error {
-		feeds,err:=s.db.GetFeeds(context.Background())
-		if err!=nil{
-			return fmt.Errorf("error: error fetching feeds\nerr: %w\n",err)
-		}
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("error: error fetching feeds\nerr: %w\n", err)
+	}
 
-		for _,feed := range feeds {
-				name,err:=	s.db.GetUserById(context.Background(),feed.UserID)
-				if err!=nil {
-					return fmt.Errorf("error: error fetching user\nerr: %w\n",err)
-				}
-			fmt.Print("Name: ",feed.Name,"\nUrl: ",feed.Url,"\nuser",name,"\n")
+	for _, feed := range feeds {
+		name, err := s.db.GetUserById(context.Background(), feed.UserID)
+		if err != nil {
+			return fmt.Errorf("error: error fetching user\nerr: %w\n", err)
 		}
-		return nil
+		fmt.Print("Name: ", feed.Name, "\nUrl: ", feed.Url, "\nuser", name, "\n")
+	}
+	return nil
+}
+
+// feed follows commands
+
+func handlerFollow(s *state, cmd command) error {
+	url := cmd.arguments[0]
+	user, err := s.db.GetUser(context.Background(), s.cfg.Username)
+
+	if err != nil {
+		return fmt.Errorf("error: error fetching user\nerr: %w\n", err)
+	}
+	
+	var feed_follow database.CreateFeedFollowParams
+
+	feed_follow.UserID = user.ID
+		s.db.CreateFeedFollow(context.Background())
 }
