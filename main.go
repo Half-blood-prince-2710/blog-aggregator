@@ -98,3 +98,8 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	return  &feed, nil
 }
+
+
+func handlerFeeds(s *state, cmd command) error {
+	
+}
