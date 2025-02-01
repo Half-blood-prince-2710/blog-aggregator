@@ -61,3 +61,19 @@ func handlerReset(s *state, cmd command) error{
 	fmt.Print("Suceesfully deleted all users \n")
 	return nil
 }
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err!=nil {
+		return fmt.Errorf("error: error fetching list of users\nerr: %s",err)
+	}
+	
+	for _,user:=range users {
+		if s.cfg.Username == user.Name {
+			fmt.Print("* ",user," (current)\n")
+		}
+		fmt.Print("* ",user.Name,"\n")
+	}
+
+	return  nil
+}
