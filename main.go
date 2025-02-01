@@ -39,6 +39,7 @@ func main(){
 	//registering our commands 
 	cmds.register("login",handlerLogin)
 	cmds.register("register",handlerRegister)
+	cmds.register("reset",)
 
 	//checking if arguments are less than 2
 	fmt.Print(os.Args,"\n")

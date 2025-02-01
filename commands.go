@@ -51,3 +51,13 @@ func handlerRegister(s *state, cmd command) error {
 	fmt.Print("User succesfully created: \n",data,"\n")
 	return nil
 }
+
+func handlerReset(s *state, cmd command) error{
+	err:= s.db.DeleteAllUser(context.Background())
+	if err!=nil {
+		return fmt.Errorf("error: error deleting users, err: %s",err)
+	}
+
+	fmt.Print("Suceesfully deleted all users \n")
+	return nil
+}
