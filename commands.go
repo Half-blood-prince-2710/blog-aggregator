@@ -138,9 +138,18 @@ func handlerFollow(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("error: error fetching user\nerr: %w\n", err)
 	}
-	
+	feed_id , err := s.db.GetFeedByUrl(context.Background(),url)
+	if err != nil {
+		return fmt.Errorf("error: error fetching feed\nerr: %w\n", err)
+	}
 	var feed_follow database.CreateFeedFollowParams
 
 	feed_follow.UserID = user.ID
-		s.db.CreateFeedFollow(context.Background())
+	feed_follow.FeedID = feed_id
+	rows,err:=	s.db.CreateFeedFollow(context.Background(),feed_follow)
+	if err != nil {
+		return fmt.Errorf("error: error creating feed follow record\nerr: %w\n", err)
+	}
+	fmt.Print("succesfully follow url: ",url," feed_name: ",rows.FeedName," user_name: ",rows.UserName,"\n")
+	return nil
 }
