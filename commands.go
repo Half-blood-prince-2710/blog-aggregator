@@ -95,4 +95,24 @@ func handleAgg(s *state, cmd command) error {
 	return nil
 }
 
-
+func handleAddFeed(s *state,cmd command) error {
+	if len(cmd.arguments)<2 {
+		return fmt.Errorf("error: not enough arguments\n ")
+	}
+	user,err:=s.db.GetUser(context.Background(),s.cfg.Username)
+	if err!=nil {
+		return fmt.Errorf("error: error fetching user\nerr: %w\n",err)
+	}
+	name := cmd.arguments[0]
+	url := cmd.arguments[1]
+	var feed database.CreateFeedParams
+	feed.Name = name
+	feed.Url= url
+	feed.UserID = user.ID
+	feeds,err:=s.db.CreateFeed(context.Background(),feed)
+	if err!=nil {
+		return fmt.Errorf("error: error creating feed\nerr: %w\n",err)
+	}
+	fmt.Print("feed: \n",feeds)
+return nil
+}
