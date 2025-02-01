@@ -71,6 +71,7 @@ func handlerUsers(s *state, cmd command) error {
 	for _,user:=range users {
 		if s.cfg.Username == user.Name {
 			fmt.Print("* ",user.Name," (current)\n")
+			continue
 		}
 		fmt.Print("* ",user.Name,"\n")
 	}
