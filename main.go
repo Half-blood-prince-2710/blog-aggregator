@@ -101,5 +101,12 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 
 func handlerFeeds(s *state, cmd command) error {
-	
+		feeds,err:=s.db.GetFeeds(context.Background())
+		if err!=nil{
+			return fmt.Errorf("error: error fetching feeds\nerr: %w\n",err)
+		}
+		
+		for _,feed := range feeds {
+			fmt.Print("Name: ",feed.Name,"\nUrl: ",feed.Url,"\nuser")
+		}
 }
