@@ -28,3 +28,26 @@ func handlerLogin(s *state, cmd command) error {
 }
 
 
+func handlerRegister(s *state, cmd command) error {
+
+	if len(cmd.arguments) == 0 {
+    return fmt.Errorf("error: username required for registration\n")
+}
+
+	user:= database.CreateUserParams{
+		ID: uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name: cmd.arguments[0],
+	}
+	data, err :=s.db.CreateUser(context.Background(),user)
+	if err!=nil{
+		return fmt.Errorf("error: user is not registered\n")
+	}
+	err= s.cfg.SetUser(data.Name)
+	if err!=nil {
+		return fmt.Errorf("error: Setting user\n")
+	}
+	fmt.Print("User succesfully created: \n",data,"\n")
+	return nil
+}
