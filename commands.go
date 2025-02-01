@@ -84,7 +84,7 @@ func handlerUsers(s *state, cmd command) error {
 // feed handlers 
 
 
-func handleAgg(s *state, cmd command) error {
+func handlerAgg(s *state, cmd command) error {
 	//fetch feed
 	feed, err:=fetchFeed(context.Background(),"https://www.wagslane.dev/index.xml")
 	if err!=nil{
@@ -95,7 +95,7 @@ func handleAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handleAddFeed(s *state,cmd command) error {
+func handlerAddFeed(s *state,cmd command) error {
 	if len(cmd.arguments)<2 {
 		return fmt.Errorf("error: not enough arguments\n ")
 	}
