@@ -42,6 +42,7 @@ func main() {
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
 	cmds.register("users", handlerUsers)
+	cmds.register("agg",handleAgg)
 
 	//checking if arguments are less than 2
 	// fmt.Print(os.Args,"\n")
@@ -89,6 +90,10 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	// fmt.Print(feed.Channel.Description,"\n",feed.Channel.Title,"\n")
 	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
 	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
+	for i:= range feed.Channel.Item {
+		feed.Channel.Item[i].Description = html.UnescapeString(feed.Channel.Item[i].Description)
+		feed.Channel.Item[i].Title = html.UnescapeString(feed.Channel.Item[i].Title)
+	}
 
 	return  &feed, nil
 }
