@@ -20,7 +20,7 @@ RETURNING id, created_at, updated_at, name, url, user_id
 type CreateFeedParams struct {
 	Name   string
 	Url    string
-	UserID uuid.NullUUID
+	UserID uuid.UUID
 }
 
 func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {

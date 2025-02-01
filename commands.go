@@ -79,6 +79,11 @@ func handlerUsers(s *state, cmd command) error {
 	return  nil
 }
 
+
+
+// feed handlers 
+
+
 func handleAgg(s *state, cmd command) error {
 	//fetch feed
 	feed, err:=fetchFeed(context.Background(),"https://www.wagslane.dev/index.xml")
@@ -89,3 +94,5 @@ func handleAgg(s *state, cmd command) error {
 	fmt.Print("feed: \n",feed,"\n")
 	return nil
 }
+
+
