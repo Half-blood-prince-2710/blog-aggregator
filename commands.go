@@ -14,16 +14,16 @@ func handlerLogin(s *state, cmd command) error {
 		return fmt.Errorf("error: username required\n")
 		
 	}
-	username := cmd.arguments[0]
-	user , err:=s.db.GetUser(context.Background(),username)
+	
+	user , err:=s.db.GetUser(context.Background(),cmd.arguments[0])
 	if err!=nil {
-
+		return fmt.Errorf("error: user is not registerd , err: %s",err)
 	}
-	err:=s.cfg.SetUser(username)
+	err =s.cfg.SetUser(user.Name)
 	if err!=nil {
 		return err
 	}
-	fmt.Print("User has been Set to ",username)
+	fmt.Print("User has been Set to ",user.Name)
 	return nil
 }
 
