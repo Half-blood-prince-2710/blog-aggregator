@@ -58,7 +58,7 @@ func handlerReset(s *state, cmd command) error{
 		return fmt.Errorf("error: error deleting users, err: %s",err)
 	}
 
-	fmt.Print("Suceesfully deleted all users \n")
+	fmt.Print("Sucessfully deleted all users \n")
 	return nil
 }
 
@@ -70,7 +70,7 @@ func handlerUsers(s *state, cmd command) error {
 	
 	for _,user:=range users {
 		if s.cfg.Username == user.Name {
-			fmt.Print("* ",user," (current)\n")
+			fmt.Print("* ",user.Name," (current)\n")
 		}
 		fmt.Print("* ",user.Name,"\n")
 	}
