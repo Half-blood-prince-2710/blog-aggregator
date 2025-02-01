@@ -122,8 +122,13 @@ func handlerFeeds(s *state, cmd command) error {
 		if err!=nil{
 			return fmt.Errorf("error: error fetching feeds\nerr: %w\n",err)
 		}
-		
+
 		for _,feed := range feeds {
-			fmt.Print("Name: ",feed.Name,"\nUrl: ",feed.Url,"\nuser")
+				name,err:=	s.db.GetUserById(context.Background(),feed.UserID)
+				if err!=nil {
+					return fmt.Errorf("error: error fetching user\nerr: %w\n",err)
+				}
+			fmt.Print("Name: ",feed.Name,"\nUrl: ",feed.Url,"\nuser",name,"\n")
 		}
+		return nil
 }
