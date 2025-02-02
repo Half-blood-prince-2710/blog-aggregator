@@ -44,11 +44,12 @@ func main() {
 	cmds.register("follow",handlerFollow)
 	cmds.register("following",handlerFollowing)
 	cmds.register("unfollow",middlewareLoggedIn(handlerUnfollow))
+	cmds.register("browse",handlerBrowse)
 
 	//checking if arguments are less than 2
 	// fmt.Print(os.Args,"\n")
 	if len(os.Args) < 2 {
-		fmt.Print("Not enough arguments\n")
+		fmt.Print("Not enough arguments \n")
 		os.Exit(1)
 	}
 	// extracting command name and arguments

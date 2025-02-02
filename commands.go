@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -82,12 +83,11 @@ func handlerUsers(s *state, cmd command) error {
 	return nil
 }
 
-// feed handlers
 func handlerAgg(s *state, cmd command) error {
 	if len(cmd.arguments) < 1 {
-		return fmt.Errorf("error: not enough arguments")
+		return fmt.Errorf("error: not enough arguments\n")
 	}
-	
+
 	timeBetweenReqs := cmd.arguments[0]
 	duration, err := time.ParseDuration(timeBetweenReqs)
 	if err != nil {
@@ -110,14 +110,11 @@ func handlerAgg(s *state, cmd command) error {
 		for {
 			select {
 			case <-ticker.C:
-				// Fetch feed periodically
-				feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+				// Scrape feeds periodically
+				err := scrapeFeeds(s)
 				if err != nil {
-					log.Printf("Error fetching feed: %v", err)
-					continue
+					log.Printf("Error scraping feeds: %v", err)
 				}
-				// Print the fetched feed to the console
-				fmt.Printf("Fetched Feed: %v\n", feed)
 			case <-signalChan:
 				// Stop the ticker and exit the loop when receiving a signal
 				fmt.Println("\nShutting down gracefully...")
@@ -246,5 +243,47 @@ func handlerUnfollow(s *state, cmd command, user database.User)error {
 		return fmt.Errorf("error: error unfollowing feed\nerr: %w", err)
 	}
 	fmt.Print("Succesfully unfollow\n")
+	return nil
+}
+
+
+func handlerBrowse(s *state, cmd command) error {
+	// Set the default limit to 2 if not provided
+	limit := 2
+	if len(cmd.arguments) > 0 {
+		// If a limit argument is provided, parse it
+		parsedLimit, err := strconv.Atoi(cmd.arguments[0])
+		if err != nil {
+			return fmt.Errorf("invalid limit: %w", err)
+		}
+		limit = parsedLimit
+	}
+	 user, err := s.db.GetUser(context.Background(), s.cfg.Username)
+    if err != nil {
+        return fmt.Errorf("error: error fetching user\nerr: %w", err)
+    }
+
+
+	// Fetch the posts from the database
+	data:= database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit: int32(limit),
+	}
+	posts, err := s.db.GetPostsForUser(context.Background(), data)
+	if err != nil {
+		return fmt.Errorf("error fetching posts: %w", err)
+	}
+
+	// Print the posts
+	if len(posts) == 0 {
+		fmt.Println("No posts found.")
+		return nil
+	}
+
+	for _, post := range posts {
+		fmt.Printf("Title: %s\nURL: %s\nDescription: %s\nPublished At: %s\n\n",
+			post.Title, post.Url, post.Description, post.PublishedAt)
+	}
+
 	return nil
 }
