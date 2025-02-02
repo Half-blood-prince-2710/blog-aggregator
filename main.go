@@ -43,7 +43,8 @@ func main() {
 	cmds.register("reset", handlerReset)
 	cmds.register("users", handlerUsers)
 	cmds.register("agg",handlerAgg)
-	cmds.register("addfeed",handlerAddFeed)
+	// cmds.register("addfeed",handlerAddFeed)
+	cmds.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	cmds.register("feeds",handlerFeeds)
 	cmds.register("follow",handlerFollow)
 	cmds.register("following",handlerFollowing)
@@ -101,5 +102,6 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	return  &feed, nil
 }
+
 
 
