@@ -109,6 +109,9 @@ func handlerAddFeed(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("error: error creating feed\nerr: %w\n", err)
 	}
+	
+
+
 	fmt.Print("feed: \n", feeds)
 	return nil
 }
@@ -151,5 +154,26 @@ func handlerFollow(s *state, cmd command) error {
 		return fmt.Errorf("error: error creating feed follow record\nerr: %w\n", err)
 	}
 	fmt.Print("succesfully follow url: ",url," feed_name: ",rows.FeedName," user_name: ",rows.UserName,"\n")
+	return nil
+}
+
+
+func handlerFollowing(s *state, cmd command)  error {
+
+	user, err := s.db.GetUser(context.Background(), s.cfg.Username)
+
+	if err != nil {
+		return fmt.Errorf("error: error fetching user\nerr: %w\n", err)
+	}
+	// var rows []database.GetFeedFollowRow
+	feeds,err :=s.db.GetFeedFollow(context.Background(),user.ID)
+
+	if err != nil {
+		return fmt.Errorf("error: error fetching feeds\nerr: %w\n", err)
+	}
+
+	for _,feed := range feeds {
+		fmt.Print(feed.Name,"\n")
+	}
 	return nil
 }
