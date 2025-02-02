@@ -46,6 +46,7 @@ func main() {
 	cmds.register("addfeed",handlerAddFeed)
 	cmds.register("feeds",handlerFeeds)
 	cmds.register("follow",handlerFollow)
+	cmds.register("following",handlerFollowing)
 
 	//checking if arguments are less than 2
 	// fmt.Print(os.Args,"\n")
