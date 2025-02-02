@@ -115,12 +115,13 @@ func handlerAddFeed(s *state, cmd command) error {
 
 	feed_follow.UserID = user.ID
 	feed_follow.FeedID = feeds.ID
-	_ ,err =	s.db.CreateFeedFollow(context.Background(),feed_follow)
+	fmt.Print("user_id",user.ID,"feed_id",feeds.ID,"\n")
+	rows,err :=	s.db.CreateFeedFollow(context.Background(),feed_follow)
 	if err != nil {
 		return fmt.Errorf("error: error creating feed follow record\nerr: %w\n", err)
 	}
-
-	fmt.Print("feed: \n", feeds)
+	fmt.Print("rows: ",rows,"\n")
+	fmt.Print("feed: \n", feeds,"\n")
 	return nil
 }
 
@@ -166,22 +167,27 @@ func handlerFollow(s *state, cmd command) error {
 }
 
 
-func handlerFollowing(s *state, cmd command)  error {
 
-	user, err := s.db.GetUser(context.Background(), s.cfg.Username)
+func handlerFollowing(s *state, cmd command) error {
+    user, err := s.db.GetUser(context.Background(), s.cfg.Username)
+    if err != nil {
+        return fmt.Errorf("error: error fetching user\nerr: %w", err)
+    }
 
-	if err != nil {
-		return fmt.Errorf("error: error fetching user\nerr: %w\n", err)
-	}
-	// var rows []database.GetFeedFollowRow
-	feeds,err :=s.db.GetFeedFollow(context.Background(),user.ID)
+    // Fetch feeds the user follows
+    feeds, err := s.db.GetFeedFollow(context.Background(), user.ID)
+    if err != nil {
+        return fmt.Errorf("error: error fetching followed feeds\nerr: %w", err)
+    }
 
-	if err != nil {
-		return fmt.Errorf("error: error fetching feeds\nerr: %w\n", err)
-	}
+    if len(feeds) == 0 {
+        fmt.Println("You are not following any feeds.")
+        return nil
+    }
 
-	for _,feed := range feeds {
-		fmt.Print(feed.Name,"\n")
-	}
-	return nil
+    // Print the followed feeds
+    for _, feed := range feeds {
+        fmt.Println(feed.Name)
+    }
+    return nil
 }
