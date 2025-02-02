@@ -111,6 +111,14 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 	
 
+	var feed_follow database.CreateFeedFollowParams
+
+	feed_follow.UserID = user.ID
+	feed_follow.FeedID = feeds.ID
+	_ ,err =	s.db.CreateFeedFollow(context.Background(),feed_follow)
+	if err != nil {
+		return fmt.Errorf("error: error creating feed follow record\nerr: %w\n", err)
+	}
 
 	fmt.Print("feed: \n", feeds)
 	return nil
