@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/half-blood-prince-2710/blog-aggregator/internal/database"
+	"github.com/lib/pq"
 )
 
 // function for fetching feeds
@@ -53,29 +54,85 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 // scrape feeds function
 
 
-func  scrapeFeeds(s *state)(error) {
+func scrapeFeeds(s *state) error {
+	// Get the next feed to fetch from the database
+	row, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("error: fetching next feed\n err: %w\n", err)
+	}
 
-	row,err:=s.db.GetNextFeedToFetch(context.Background())
-	if err!=nil {
-		return fmt.Errorf("error: error fetching next feed\n err: %w\n",err)
+	// Mark the feed as fetched
+	data := database.MarkFeedFetchedParams{
+		ID: row.ID,
+		LastFetchedAt: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true, // Mark as valid to indicate it's not NULL
+		},
+		UpdatedAt: time.Now(),
 	}
-	var data database.MarkFeedFetchedParams
-	data.ID = row.ID
-	data.LastFetchedAt = sql.NullTime{
-		Time: time.Now(), // Assign the current time
-		Valid: true,         // Set Valid to true to indicate it's not NULL
+
+	err = s.db.MarkFeedFetched(context.Background(), data)
+	if err != nil {
+		return fmt.Errorf("error: marking feed as fetched\n err: %w\n", err)
 	}
-	data.UpdatedAt = time.Now()
-	err = s.db.MarkFeedFetched(context.Background(),data)
-	if err!=nil {
-		return fmt.Errorf("error: error marking feed\n err: %w\n",err)
+
+	// Fetch the RSS feed data
+	feed, err := fetchFeed(context.Background(), row.Url)
+	if err != nil {
+		return fmt.Errorf("error: fetching feed\n err: %w\n", err)
 	}
-	feed,err:=fetchFeed(context.Background(),row.Url)
-	if err!=nil {
-		return fmt.Errorf("error: error fetching feed\n err: %w\n",err)
+
+	// Iterate through feed items and save them to the database
+	for _, item := range feed.Channel.Item {
+		// Parse the "published_at" timestamp correctly
+		publishedAt, err := parsePublishedTime(item.PubDate)
+		if err != nil {
+			fmt.Printf("warning: failed to parse published_at for post %s\n", item.Title)
+			continue // Skip this post if the timestamp can't be parsed
+		}
+
+		// Prepare the post data for insertion
+		postData := database.CreatePostParams{
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: item.Description,
+			PublishedAt: publishedAt,
+			FeedID:      row.ID,
+		}
+
+		// Insert post into the database
+		_, err = s.db.CreatePost(context.Background(), postData)
+		if err != nil {
+			// Ignore duplicate URL errors, log others
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+				fmt.Printf("info: duplicate post skipped: %s\n", item.Title)
+			} else {
+				fmt.Printf("error: failed to save post %s\n err: %v\n", item.Title, err)
+			}
+			continue
+		}
+
+		fmt.Printf("success: saved post %s\n", item.Title)
 	}
-	for _,val := range feed.Channel.Item {
-		fmt.Print(val.Title,"\n")
+
+	return nil
+}
+
+// Parses different date formats from RSS feeds
+func parsePublishedTime(pubDate string) (time.Time, error) {
+	layouts := []string{
+		time.RFC1123,    // "Mon, 02 Jan 2006 15:04:05 MST"
+		time.RFC1123Z,   // "Mon, 02 Jan 2006 15:04:05 -0700"
+		time.RFC3339,    // "2006-01-02T15:04:05Z07:00"
+		"Mon, 02 Jan 2006 15:04:05 -0700", // Some RSS variations
 	}
-return nil
+
+	for _, layout := range layouts {
+		t, err := time.Parse(layout, pubDate)
+		if err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unable to parse published date: %s", pubDate)
 }
