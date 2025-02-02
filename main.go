@@ -48,6 +48,7 @@ func main() {
 	cmds.register("feeds",handlerFeeds)
 	cmds.register("follow",handlerFollow)
 	cmds.register("following",handlerFollowing)
+	cmds.register("unfollow",middlewareLoggedIn(handlerUnfollow))
 
 	//checking if arguments are less than 2
 	// fmt.Print(os.Args,"\n")
@@ -55,11 +56,13 @@ func main() {
 		fmt.Print("Not enough arguments\n")
 		os.Exit(1)
 	}
+	// extracting command name and arguments
 	cmd := command{
 		name:      os.Args[1],
 		arguments: os.Args[2:],
 	}
 
+	// running the command
 	err = cmds.run(s, cmd)
 	if err != nil {
 		fmt.Print("Error: ", err)
@@ -68,6 +71,7 @@ func main() {
 
 }
 
+// function for fetching feeds
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feedURL, nil)
 	if err != nil {
