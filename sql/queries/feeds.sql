@@ -14,3 +14,9 @@ SELECT id FROM feeds WHERE url = $1;
 UPDATE feeds 
 SET updated_at = $1 , last_fetched_at = $2
 WHERE id = $3;
+
+-- name: GetNextFeedToFetch :one
+SELECT id, name, url, last_fetched_at
+FROM feeds
+ORDER BY last_fetched_at NULLS FIRST, created_at ASC
+LIMIT 1;
