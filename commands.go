@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -79,17 +83,55 @@ func handlerUsers(s *state, cmd command) error {
 }
 
 // feed handlers
-
 func handlerAgg(s *state, cmd command) error {
-	//fetch feed
-	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		fmt.Print("err: ", err, "\n")
-		return err
+	if len(cmd.arguments) < 1 {
+		return fmt.Errorf("error: not enough arguments")
 	}
-	fmt.Print("feed: \n", feed, "\n")
+	
+	timeBetweenReqs := cmd.arguments[0]
+	duration, err := time.ParseDuration(timeBetweenReqs)
+	if err != nil {
+		return fmt.Errorf("invalid duration format: %w", err)
+	}
+
+	// Print the interval message
+	fmt.Printf("Collecting feeds every %v\n", duration)
+
+	// Set up a ticker to scrape feeds at regular intervals
+	ticker := time.NewTicker(duration)
+
+	// Create a signal channel to handle graceful shutdown
+	signalChan := make(chan os.Signal, 1)
+	// Notify the signal channel for SIGINT (Ctrl+C) and SIGTERM signals
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Ensure the loop runs immediately before waiting for the first ticker
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				// Fetch feed periodically
+				feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+				if err != nil {
+					log.Printf("Error fetching feed: %v", err)
+					continue
+				}
+				// Print the fetched feed to the console
+				fmt.Printf("Fetched Feed: %v\n", feed)
+			case <-signalChan:
+				// Stop the ticker and exit the loop when receiving a signal
+				fmt.Println("\nShutting down gracefully...")
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
+	// Block the main goroutine to keep the process running
+	<-signalChan
 	return nil
 }
+
 
 func handlerAddFeed(s *state, cmd command,user database.User) error {
 	if len(cmd.arguments) < 2 {
